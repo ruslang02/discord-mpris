@@ -1,0 +1,30 @@
+{
+  "name": "nuvola-discord",
+  "version": "1.0.0",
+  "description": "Discord RPC app for MRPIS-enabled players",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "node bin",
+    "build": "tsc -b tsconfig.json",
+    "test": "ts-node ."
+  },
+  "author": {
+    "name": "Ruslan Garifullin",
+    "email": "ruslan.g2002@gmail.com"
+  },
+  "license": "GPL",
+  "dependencies": {
+    "dbus-next": "^0.8.2",
+    "discord-rpc": "^3.1.1",
+    "discord.js": "^11.6.4",
+    "image-data-uri": "^2.0.1",
+    "md5": "^2.2.1",
+    "mpris-service": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/discord-rpc": "^3.0.4",
+    "@types/node": "^14.0.1",
+    "ts-node": "^8.10.1",
+    "typescript": "^3.9.2"
+  }
+}
