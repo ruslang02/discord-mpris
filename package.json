@@ -6,8 +6,7 @@
   "scripts": {
     "start": "node bin",
     "build": "tsc -b tsconfig.json",
-	"test": "ts-node .",
-	"postinstall": "tsc -b tsconfig.json"
+	"test": "ts-node ."
   },
   "author": {
     "name": "Ruslan Garifullin",

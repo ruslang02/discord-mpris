@@ -12,9 +12,10 @@ Requires Node.JS and NPM installed: <https://nodejs.org/>
 
 ### From TypeScript
 ```bash
-git clone https://github.com/ruslang02/discord-mpris
-npm install
-TOKEN=<user_token> APP_ID=<app_id> npm start
+git clone https://github.com/ruslang02/discord-mpris # Clone the repo
+npm install # Install all dependencies
+npm run-script build # Build TypeScript files
+TOKEN=<user_token> APP_ID=<app_id> npm start # Run the plugin
 ```
 
 ### From Release
