@@ -1,17 +1,16 @@
+import util from "util";
 import { Client } from "discord-rpc";
-import { APP_ID as clientId } from "./Environment";
+import { APP_ID as clientId, DEBUG } from "./Environment";
 import MPRIS from "./MPRIS";
 import Assets from "./Assets";
 import { createLogger } from "./Console";
-const {log} = createLogger("[rpc]");
+
+const { log } = createLogger("[rpc]");
 
 export default class RPC {
 	client: Client;
 	mpris: MPRIS;
 	assets: Assets;
-	trackId: string = "";
-	trackArt: string = "";
-	trackStatus: string = "playing";
 
 	constructor() {
 		this.client = new Client({ transport: "ipc" });
@@ -20,35 +19,44 @@ export default class RPC {
 	}
 
 	async whenReady() {
-		const {client, mpris, assets} = this;
+		const { client, mpris, assets } = this;
 		return Promise.all([
 			assets.whenReady(),
 			client.login({ clientId }),
 			mpris.whenReady()
-		]).then(() => log("Ready."));
+		]).then(() => {
+			if(DEBUG) Object.assign(global, { rpc: this });
+			mpris.on("update", this.update.bind(this))
+			log("Ready.");
+		});
 	}
 
 	async update() {
-		let {client, mpris, trackId, trackArt, trackStatus, assets, ms2str} = this;
-		const playing = await mpris.getPlaying();
-		log(`Playing ${playing.title}, written by ${playing.artist}, ${ms2str(playing.current / 1000)}/${ms2str(playing.duration / 1000)}`);
-		if (playing.id != trackId) {
-			trackId = playing.id;
-			trackArt = await assets.upload(playing);
-		}
+		let { client, mpris, assets } = this;
+		const info = await mpris.getPlaying();
+
+		log(util.format("%s %s, written by %s, %s/%s",
+			info.state,
+			info.title,
+			info.artist,
+			ms2str(info.current),
+			ms2str(info.duration)));
+
 		return client.setActivity({
-			details: playing.title,
-			state: playing.artist,
-			largeImageKey: trackArt,
-			largeImageText: "Cool, right?",
-			smallImageKey: trackStatus,
-			smallImageText: trackStatus[0].toUpperCase() + trackStatus.substring(1),
-			startTimestamp: new Date().getTime() - playing.current,
+			details: info.title,
+			state: info.artist + " • " + info.album,
+			largeImageKey: await assets.get(info),
+			largeImageText: "Tell Ruzik this Rich Presence is cool",
+			smallImageKey: info.state.toLowerCase(),
+			smallImageText: info.state,
+			startTimestamp: info.state === "Playing" ? new Date().getTime() - info.current : undefined,
 		});
 	}
-	ms2str(durationMs: number): string {
-		let duration = (durationMs / 60 < 1 ? "0" : "") + ":" + (durationMs % 60 < 10 ? "0" : "") + Math.floor(durationMs % 60);
-		durationMs /= 60;
-		return Math.floor(durationMs) + duration;
-	}
+}
+function ms2str(durationPs: number) {
+	const durationMs = durationPs / 1000;
+	return Math.floor(durationMs / 60) +
+		":" +
+		(durationMs % 60 < 10 ? "0" : "") +
+		Math.floor(durationMs % 60);
 }
