@@ -1,12 +1,12 @@
 import { TOKEN, APP_ID, DEBUG } from "./Environment";
 import { PlayerInfo } from "./MPRIS";
-import { fileURLToPath } from "url";
+import { fileURLToPath, URL } from "url";
 import fs from "fs/promises";
 import { createLogger } from "./Console";
 import axios from "axios";
 import { Hash, createHash } from "crypto";
 
-const { log, warn } = createLogger("[assets]");
+const { log, warn, debug, error } = createLogger("[assets]");
 const discord = axios.create({
 	baseURL: `https://discord.com/api/v6/oauth2/applications/${APP_ID}`
 });
@@ -26,6 +26,15 @@ type Application = {
 	// more to it that we don't need
 }
 
+function isURL(input: string): boolean {
+	try {
+		new URL(input);
+		return true;
+	} catch (e) {
+		return false;
+	}
+}
+
 export default class Assets {
 	application: Application | null = null;
 	cache: Set<AssetId> | null = null;
@@ -41,28 +50,38 @@ export default class Assets {
 		const { data } = await discord.get<Asset[]>("/assets");
 		this.cache = new Set(data.map(a => a.name));
 
-		if(DEBUG) Object.assign(global, { assets: this });
+		if (DEBUG) Object.assign(global, { assets: this });
 		log(`${this.cache.size} assets loaded into cache`)
 	}
 
-	private async upload(name: string, image: string) {
+	private async upload(name: string, image: string): Promise<AssetId> {
 		let { cache } = this;
+		if (!cache) return "yt";
 		const asset = {
 			name,
 			type: "1", // What is this for?
 			image
 		}
-		const { data } = await discord.post<Asset>('/assets', asset);
-		log("Uploaded album art", data);
-
-		cache?.add(data.name);
-		return name;
+		cache.add(name);
+		try {
+			const { data } = await discord.post<Asset>('/assets', asset);
+			log("Uploaded album art", data);
+			return name;
+		} catch(ex) {
+			error(ex);
+			cache.delete(name);
+			return "yt";
+		}
 	}
 
 	async get(player: PlayerInfo): Promise<AssetId> {
 		let { cache, hash } = this;
 		if (!cache) {
 			warn("Attempted to upload art before downloading cache, skipping.");
+			return "yt";
+		}
+		if (!isURL(player.art)) {
+			debug("This song does not contain an album art.");
 			return "yt";
 		}
 

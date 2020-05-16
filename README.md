@@ -23,6 +23,8 @@ TOKEN=<user_token> APP_ID=<app_id> npm start # Run the plugin
  - Install runtime dependencies: `npm ci --only=production`
  - Run: `TOKEN=<user_token> APP_ID=<app_id> npm start`
 
+**Caveat!** Discord Rich Presence is limited to 150 assets per app, which means you might have to clean them from time to time!
+
 ## Alternatives
 Comparing to [discordrp-mpris](https://github.com/FichteFoll/discordrp-mpris) enables user to display currently playing album covers instead of the app's icon.
 
