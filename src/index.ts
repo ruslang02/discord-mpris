@@ -1,5 +1,4 @@
-import RPC from "./RPC";
-import { UPDATE_RATE } from "./Environment";
+import RPC from './RPC';
 
 const rpc = new RPC();
 

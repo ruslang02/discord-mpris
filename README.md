@@ -1,29 +1,26 @@
 # Discord Rich Presence client for MPRIS players
 
+A Discord Rich Presence client to display currentky playing music from MPRIS-supporting players.
+
 ![Screenshot](screenshot.png)
 
-**Warning!** Requires a user account token and a Rich Presence app on <https://discordapp.com/developers/applications>.
-
-**Beware!** User token is used to send data to Discord's REST APIs which may be seen as a violation of Discord ToS, we don't take responsibility for any accounts banned, proceed at your own risk.
+**Warning!** Requires a user account token and a Rich Presence app on <https://discordapp.com/developers/applications>. User token is used to send data to Discord's REST APIs which may be seen as a violation of Discord ToS, we don't take responsibility for any accounts banned, proceed at your own risk.
 
 ## Installation
 
 Requires Node.JS and NPM installed: <https://nodejs.org/>
 
-### From TypeScript
 ```bash
 git clone https://github.com/ruslang02/discord-mpris # Clone the repo
 npm install # Install all dependencies
-npm run-script build # Build TypeScript files
-TOKEN=<user_token> APP_ID=<app_id> npm start # Run the plugin
+npm run build # Build TypeScript files
 ```
 
-### From Release
- - Download and unpack the latest release: <https://github.com/ruslang02/discord-mpris/releases/latest/download/discord-mpris.tar.gz>
- - Install runtime dependencies: `npm ci --only=production`
- - Run: `TOKEN=<user_token> APP_ID=<app_id> npm start`
+Then you need to configure your installation using the `config.js` file, sample of which is located in the `config.sample.js` file.
 
-**Caveat!** Discord Rich Presence is limited to 150 assets per app, which means you might have to clean them from time to time!
+```
+npm start # Run the plugin
+```
 
 ## Alternatives
 Comparing to [discordrp-mpris](https://github.com/FichteFoll/discordrp-mpris) enables user to display currently playing album covers instead of the app's icon.
@@ -33,5 +30,4 @@ Currently tested on [YouTube Music app for Nuvola Apps Service](https://nuvola.t
 
 ## TODO
  - Support for other media players
- - Option to use without custom album covers feature
  - Support for restarting/reconnecting/error handling
