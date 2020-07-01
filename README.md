@@ -1,6 +1,6 @@
 # Discord Rich Presence client for MPRIS players
 
-A Discord Rich Presence client to display currentky playing music from MPRIS-supporting players.
+A Discord Rich Presence client to display currently playing music from MPRIS-supporting players.
 
 ![Screenshot](screenshot.png)
 
