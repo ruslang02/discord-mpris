@@ -1,4 +1,4 @@
-import DBus, { ProxyObject, ClientInterface } from 'dbus-next';
+import DBus, { ProxyObject, ClientInterface, DBusError } from 'dbus-next';
 import { EventEmitter } from 'events';
 import {
   MPRIS_IFACE, MPRIS_PATH, PROPERTIES_IFACE, PLAYER, DEBUG,
@@ -6,7 +6,7 @@ import {
 import createLogger from './Console';
 import { getString, getNumber } from './Utilities';
 
-const { log } = createLogger('[mpris]');
+const { log, error } = createLogger('[mpris]');
 
 export type PlayerInfo = {
   title: string;
@@ -18,7 +18,9 @@ export type PlayerInfo = {
   id: string;
   state: string;
 };
-
+/**
+ * Manages MPRIS players using `dbus-next`.
+ */
 export default class MPRIS extends EventEmitter {
   bus: DBus.MessageBus;
 
@@ -33,27 +35,36 @@ export default class MPRIS extends EventEmitter {
     this.bus = DBus.sessionBus();
   }
 
+  /**
+   * Initializes D-Bus interfaces.
+   */
   async whenReady(): Promise<void> {
     const { bus } = this;
-
-    this.mpris = await bus.getProxyObject(PLAYER, MPRIS_PATH);
-    this.player = this.mpris.getInterface(MPRIS_IFACE);
-    this.props = this.mpris.getInterface(PROPERTIES_IFACE);
-
-    this.props.on('PropertiesChanged', this.emit.bind(this, 'update'));
+    try {
+      this.mpris = await bus.getProxyObject(PLAYER, MPRIS_PATH);
+      this.player = this.mpris.getInterface(MPRIS_IFACE);
+      this.props = this.mpris.getInterface(PROPERTIES_IFACE);
+      this.props.on('PropertiesChanged', this.emit.bind(this, 'update'));
+    } catch (e) {
+      const err = e as DBusError;
+      throw new Error(`MPRIS initialization failed. ${err.text}`);
+    }
     if (DEBUG) Object.assign(global, { mpris: this });
 
     log('Ready.');
   }
 
+  /**
+   * Gets a currently playing song.
+   */
   async getPlaying(): Promise<PlayerInfo> {
     const { props } = this;
-    const metadata: object = await props?.Get(MPRIS_IFACE, 'Metadata');
-    const position: object = await props?.Get(MPRIS_IFACE, 'Position');
-    const state: object = await props?.Get(MPRIS_IFACE, 'PlaybackStatus');
+    const metadata = await props?.Get(MPRIS_IFACE, 'Metadata');
+    const position = await props?.Get(MPRIS_IFACE, 'Position');
+    const state = await props?.Get(MPRIS_IFACE, 'PlaybackStatus');
     return {
-      title: getString(metadata, 'xesam:title'),
-      artist: getString(metadata, 'xesam:artist'),
+      title: getString(metadata, 'xesam:title') || 'No title',
+      artist: getString(metadata, 'xesam:artist') || 'No artist',
       album: getString(metadata, 'xesam:album'),
       duration: getNumber(metadata, 'mpris:length') / 1000,
       current: getNumber(position) / 1000,

@@ -31,14 +31,28 @@ type Application = {
   name: string;
   // more to it that we don't need
 };
-
+/**
+ * Manages Rich Presence assets using Discord REST API.
+ */
 export default class Assets {
+  /**
+   * Rich Presence application which is being controlled.
+   */
   application: Application | null = null;
 
+  /**
+   * Cache for Rich Presence assets which ensures assets are not uploaded more than once.
+   */
   cache: Set<Asset> | null = null;
 
+  /**
+   * MD5 hash crypto function.
+   */
   hash: Hash = createHash('MD5');
 
+  /**
+   * Initializes application.
+   */
   async whenReady(): Promise<void> {
     const { data } = await discord.get<Application>('');
     log(`Working with "${data.name}" (ID: ${data.id})...`);
@@ -46,6 +60,9 @@ export default class Assets {
     return this.loadCache();
   }
 
+  /**
+   * Preloads cached assets.
+   */
   async loadCache(): Promise<void> {
     const { data } = await discord.get<Asset[]>('/assets');
     this.cache = new Set(data);
@@ -54,6 +71,11 @@ export default class Assets {
     log(`${this.cache.size} assets loaded into cache`);
   }
 
+  /**
+   * Uploads a Rich Presence asset to the API.
+   * @param name ID of the asset.
+   * @param image Album art data.
+   */
   private async upload(name: string, image: string): Promise<AssetId> {
     const { cache } = this;
     if (!cache) return 'yt';
@@ -83,20 +105,28 @@ export default class Assets {
     }
   }
 
-  purge(): Promise<string[]> {
+  /**
+   * Purges oldest album arts from the Rich Presence assets.
+   * @param amount Number of assets to delete.
+   */
+  purge(amount = 5): Promise<string[]> {
     const { cache } = this;
     if (!cache) throw new Error('No cache found.');
 
     const promises: Promise<string>[] = [];
     let total = 0;
     cache.forEach((asset) => {
-      if (total > 5) return;
+      if (total > amount) return;
       if (!WHITELIST.includes(asset.id)) promises.push(this.delete(asset.id));
       total += 1;
     });
     return Promise.all(promises);
   }
 
+  /**
+   * Deletes an asset from the Rich Presence asset list.
+   * @param id Asset ID to delete.
+   */
   async delete(id: string): Promise<string> {
     const { cache } = this;
     if (!cache) throw new Error('No cache found.');
@@ -110,24 +140,30 @@ export default class Assets {
     return id;
   }
 
-  async get(player: PlayerInfo): Promise<AssetId> {
+  /**
+   * Gets the album art's ID from the cache or uploads the art to the API.
+   * @param artUrl Album art's file URL.
+   */
+  async get(artUrl: string): Promise<AssetId> {
     const { cache, hash } = this;
     if (!cache) {
       warn('Attempted to upload art before downloading cache, skipping.');
       return 'yt';
     }
-    if (!isURL(player.art)) {
+    if (!isURL(artUrl)) {
       debug('This song does not contain an album art.');
       return 'yt';
     }
 
-    const imagePath = fileURLToPath(player.art);
+    const imagePath = fileURLToPath(artUrl);
     const buffer = await fs.readFile(imagePath);
     const image = `data:image/jpg;base64,${buffer.toString('base64')}`;
 
     hash.update(image);
     const name = hash.digest('hex');
     hash.destroy();
+    // We generate an MD5 checksum to compare with other images in the cache.
+
     this.hash = createHash('MD5');
     let result = '';
     cache.forEach((asset) => {

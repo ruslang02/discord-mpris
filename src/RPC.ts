@@ -64,10 +64,10 @@ export default class RPC {
       ms2str(info.duration)));
     try {
       await client.setActivity({
-        details: info.title || 'No title',
-        state: (info.artist || 'No artist') + (info.album ? ` • ${info.album}` : ''),
-        largeImageKey: await assets.get(info),
-        largeImageText: 'Tell Ruzik this Rich Presence is cool',
+        details: info.title,
+        state: info.artist + (info.album ? ` • ${info.album}` : ''),
+        largeImageKey: await assets.get(info.art),
+        largeImageText: info.album || 'discord-mpris',
         smallImageKey: info.state.toLowerCase(),
         smallImageText: info.state,
         startTimestamp: info.state === 'Playing' ? new Date().getTime() - info.current : undefined,
