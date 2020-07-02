@@ -67,7 +67,7 @@ export default class RPC {
         details: info.title,
         state: info.artist + (info.album && SHOW_ALBUM_DETAILS ? ` • ${info.album}` : ''),
         largeImageKey: await assets.get(info.art),
-        largeImageText: info.album || '',
+        largeImageText: info.album || 'discord-mpris',
         smallImageKey: info.state.toLowerCase(),
         smallImageText: info.state,
         startTimestamp: info.state === 'Playing' ? new Date().getTime() - info.current : undefined,

@@ -6,7 +6,7 @@ import {
 import createLogger from './Console';
 import { getString, getNumber } from './Utilities';
 
-const { log, error } = createLogger('[mpris]');
+const { log } = createLogger('[mpris]');
 
 export type PlayerInfo = {
   title: string;

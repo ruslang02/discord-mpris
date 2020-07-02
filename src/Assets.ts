@@ -6,7 +6,6 @@ import { Hash, createHash } from 'crypto';
 import {
   TOKEN, APP_ID, DEBUG, WHITELIST,
 } from './Environment';
-import { PlayerInfo } from './MPRIS';
 import createLogger from './Console';
 import { isURL } from './Utilities';
 
@@ -118,7 +117,7 @@ export default class Assets {
     let total = 0;
     cache.forEach((asset) => {
       if (total > amount) return;
-      if (!WHITELIST.includes(asset.id)) promises.push(this.delete(asset.id));
+      if (!WHITELIST.includes(asset.name)) promises.push(this.delete(asset.id));
       total += 1;
     });
     return Promise.all(promises);

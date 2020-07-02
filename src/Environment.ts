@@ -11,4 +11,4 @@ export const APP_ID = config.appId;
 export const DEBUG = !!config.debug;
 export const SHOW_ALBUM_DETAILS = !!config.showAlbumDetails;
 export const PLAYER = config.player ?? 'org.mpris.MediaPlayer2.NuvolaAppYoutubeMusic';
-export const WHITELIST: string[] = config.whiteList ?? [];
+export const WHITELIST: string[] = [...(config.whiteList ?? []), 'default', 'playing', 'paused'];
