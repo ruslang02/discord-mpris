@@ -8,3 +8,4 @@ export const mprisPath: string;
 export const propertiesInterface: string;
 export const whiteList: string[];
 export const debug: boolean;
+export const showAlbumDetails: boolean;

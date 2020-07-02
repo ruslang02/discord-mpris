@@ -17,5 +17,6 @@ module.exports = {
   mprisPath: '/org/mpris/MediaPlayer2',
   // Properties DBUS interface (you shouldn't change this).
   propertiesInterface: 'org.freedesktop.DBus.Properties',
-
+  // Toggle whether the album should be shown in the details.
+  showAlbumDetails: false,
 };

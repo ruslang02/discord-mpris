@@ -1,6 +1,6 @@
 import util from 'util';
 import { Client } from 'discord-rpc';
-import { APP_ID as clientId, DEBUG } from './Environment';
+import { APP_ID as clientId, DEBUG, SHOW_ALBUM_DETAILS } from './Environment';
 import MPRIS from './MPRIS';
 import Assets from './Assets';
 import createLogger from './Console';
@@ -65,9 +65,9 @@ export default class RPC {
     try {
       await client.setActivity({
         details: info.title,
-        state: info.artist + (info.album ? ` • ${info.album}` : ''),
+        state: info.artist + (info.album && SHOW_ALBUM_DETAILS ? ` • ${info.album}` : ''),
         largeImageKey: await assets.get(info.art),
-        largeImageText: info.album || 'discord-mpris',
+        largeImageText: info.album || '',
         smallImageKey: info.state.toLowerCase(),
         smallImageText: info.state,
         startTimestamp: info.state === 'Playing' ? new Date().getTime() - info.current : undefined,

@@ -15,6 +15,7 @@ const {
 } = createLogger('[assets]');
 const discord = axios.create({
   baseURL: `https://discord.com/api/v6/oauth2/applications/${APP_ID}`,
+  validateStatus: () => true,
 });
 discord.defaults.headers.common.Authorization = TOKEN;
 
@@ -78,7 +79,7 @@ export default class Assets {
    */
   private async upload(name: string, image: string): Promise<AssetId> {
     const { cache } = this;
-    if (!cache) return 'yt';
+    if (!cache) return 'default';
     const asset = {
       name,
       type: '1', // What is this for?
@@ -101,7 +102,7 @@ export default class Assets {
         }
       }
       error(ex);
-      return 'yt';
+      return 'default';
     }
   }
 
@@ -148,11 +149,11 @@ export default class Assets {
     const { cache, hash } = this;
     if (!cache) {
       warn('Attempted to upload art before downloading cache, skipping.');
-      return 'yt';
+      return 'default';
     }
     if (!isURL(artUrl)) {
       debug('This song does not contain an album art.');
-      return 'yt';
+      return 'default';
     }
 
     const imagePath = fileURLToPath(artUrl);
