@@ -1,6 +1,11 @@
 import util from 'util';
 import { Client } from 'discord-rpc';
-import { APP_ID as clientId, DEBUG, SHOW_ALBUM_DETAILS } from './Environment';
+import {
+  APP_ID as clientId,
+  DEBUG,
+  SHOW_ALBUM_DETAILS,
+  DISABLE_COVERS,
+} from './Environment';
 import MPRIS from './MPRIS';
 import Assets from './Assets';
 import createLogger from './Console';
@@ -55,18 +60,24 @@ export default class RPC {
   async update(): Promise<void> {
     const { client, mpris, assets } = this;
     const info = await mpris.getPlaying();
+    const coverId = DISABLE_COVERS ? 'default' : await assets.get(info.art);
 
-    log(util.format('%s %s, written by %s, %s/%s',
-      info.state,
-      info.title,
-      info.artist,
-      ms2str(info.current),
-      ms2str(info.duration)));
+    log(
+      util.format(
+        '%s %s, written by %s, %s/%s, album cover %s',
+        info.state,
+        info.title,
+        info.artist,
+        ms2str(info.current),
+        ms2str(info.duration),
+        coverId,
+      ),
+    );
     try {
       await client.setActivity({
         details: info.title,
         state: info.artist + (info.album && SHOW_ALBUM_DETAILS ? ` • ${info.album}` : ''),
-        largeImageKey: await assets.get(info.art),
+        largeImageKey: coverId,
         largeImageText: info.album || 'discord-mpris',
         smallImageKey: info.state.toLowerCase(),
         smallImageText: info.state,

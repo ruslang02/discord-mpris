@@ -1,10 +1,10 @@
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import axios, { AxiosError } from 'axios';
-import { Hash, createHash } from 'crypto';
+import { createHash } from 'crypto';
 
 import {
-  TOKEN, APP_ID, DEBUG, WHITELIST,
+  TOKEN, APP_ID, DEBUG, WHITELIST, DISABLE_COVERS,
 } from './Environment';
 import createLogger from './Console';
 import { isURL } from './Utilities';
@@ -14,7 +14,6 @@ const {
 } = createLogger('[assets]');
 const discord = axios.create({
   baseURL: `https://discord.com/api/v6/oauth2/applications/${APP_ID}`,
-  validateStatus: () => true,
 });
 discord.defaults.headers.common.Authorization = TOKEN;
 
@@ -46,11 +45,6 @@ export default class Assets {
   cache: Set<Asset> | null = null;
 
   /**
-   * MD5 hash crypto function.
-   */
-  hash: Hash = createHash('MD5');
-
-  /**
    * Initializes application.
    */
   async whenReady(): Promise<void> {
@@ -78,7 +72,7 @@ export default class Assets {
    */
   private async upload(name: string, image: string): Promise<AssetId> {
     const { cache } = this;
-    if (!cache) return 'default';
+    if (!cache || DISABLE_COVERS) return 'default';
     const asset = {
       name,
       type: '1', // What is this for?
@@ -87,18 +81,15 @@ export default class Assets {
     log(`Attempting to upload ${name}...`);
     try {
       const { data } = await discord.post<Asset>('/assets', asset);
+      console.log(data);
       log(`Uploaded album art. ID: ${data.id}`);
       cache.add(data);
-      return name;
+      return data.id;
     } catch (ex) {
       const { isAxiosError, response } = ex as AxiosError;
-      if (isAxiosError) {
-        if (response?.status === 400) {
-          if (response.data.code === 30017) {
-            await this.purge();
-            return this.upload(name, image);
-          }
-        }
+      if (isAxiosError && response?.status === 400 && response.data.code === 30017) {
+        await this.purge();
+        return this.upload(name, image);
       }
       error(ex);
       return 'default';
@@ -132,8 +123,10 @@ export default class Assets {
     if (!cache) throw new Error('No cache found.');
     log(`Deleting ${id}...`);
 
-    const { data, status } = await discord.delete<Asset>(`/assets/${id}`);
-    if (status >= 300) error(`Unable to delete asset ${id}: ${data}`);
+    const { data, status } = await discord.delete<Asset>(`/assets/${id}`, { validateStatus: () => true });
+    if (status >= 300) {
+      error(`Unable to delete asset ${id}:`, data);
+    }
     cache.forEach((asset) => {
       if (asset.id === id) cache.delete(asset);
     });
@@ -145,7 +138,11 @@ export default class Assets {
    * @param artUrl Album art's file URL.
    */
   async get(artUrl: string): Promise<AssetId> {
-    const { cache, hash } = this;
+    const { cache } = this;
+    if (DISABLE_COVERS) {
+      warn('Album cover functionality is disabled.');
+      return 'default';
+    }
     if (!cache) {
       warn('Attempted to upload art before downloading cache, skipping.');
       return 'default';
@@ -159,15 +156,11 @@ export default class Assets {
     const buffer = await fs.readFile(imagePath);
     const image = `data:image/jpg;base64,${buffer.toString('base64')}`;
 
-    hash.update(image);
-    const name = hash.digest('hex');
-    hash.destroy();
+    const name = createHash('md5').update(image).digest('hex');
     // We generate an MD5 checksum to compare with other images in the cache.
-
-    this.hash = createHash('MD5');
     let result = '';
     cache.forEach((asset) => {
-      if (asset.name === name) result = name;
+      if (asset.name === name) result = asset.id;
     });
     return result || this.upload(name, image);
   }
