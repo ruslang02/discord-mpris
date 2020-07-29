@@ -84,7 +84,7 @@ export default class Assets {
       console.log(data);
       log(`Uploaded album art. ID: ${data.id}`);
       cache.add(data);
-      return data.id;
+      return data.name;
     } catch (ex) {
       const { isAxiosError, response } = ex as AxiosError;
       if (isAxiosError && response?.status === 400 && response.data.code === 30017) {
@@ -160,7 +160,7 @@ export default class Assets {
     // We generate an MD5 checksum to compare with other images in the cache.
     let result = '';
     cache.forEach((asset) => {
-      if (asset.name === name) result = asset.id;
+      if (asset.name === name) result = asset.name;
     });
     return result || this.upload(name, image);
   }

@@ -14,4 +14,4 @@ export const DISABLE_COVERS = !!config.disableCovers;
 export const PLAYER = config.player ?? 'org.mpris.MediaPlayer2.NuvolaAppYoutubeMusic';
 export const WHITELIST: string[] = [...(config.whiteList ?? []), 'default', 'playing', 'paused'];
 
-if (!DISABLE_COVERS) console.warn('[config]', 'You have disabled covers functionality. You can change this setting in the config.js file');
+if (DISABLE_COVERS) console.warn('[config]', 'You have disabled covers functionality. You can change this setting in the config.js file');
