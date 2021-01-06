@@ -14,7 +14,7 @@
   },
   "license": "GPL",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "dbus-next": "^0.8.2",
     "discord-rpc": "^3.1.1",
     "eslint": "^7.1.0"
